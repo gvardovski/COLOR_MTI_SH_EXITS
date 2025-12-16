@@ -1,0 +1,12 @@
+# Path to the data files *.CSV
+Data_filename_day: data/NASDAQ:GOOG_day.CSV
+
+# size type: 'value' 'amount' 'percent'
+Trade:
+  size: 1
+  size_type: amount
+
+# Start cash value
+Initial_cash: 10000
+
+Days: 2
