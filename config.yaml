@@ -1,5 +1,5 @@
 # Path to the data files *.CSV
-Data_filename_day: data/GS_day_FMP.CSV
+Data_filename_day: data/GOOG_day_FMP.CSV
 
 # size type: 'value' 'amount' 'percent'
 Trade:
@@ -9,4 +9,4 @@ Trade:
 # Start cash value
 Initial_cash: 10000
 
-Days: 2
+Days: 0
