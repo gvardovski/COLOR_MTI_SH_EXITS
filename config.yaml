@@ -1,5 +1,5 @@
 # Path to the data files *.CSV
-Data_filename_day: data/NASDAQ:GOOG_day.CSV
+Data_filename_day: data/GS_day_FMP.CSV
 
 # size type: 'value' 'amount' 'percent'
 Trade:
