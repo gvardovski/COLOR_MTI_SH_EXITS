@@ -1,4 +1,5 @@
 import pandas as pd
+import re
 import vectorbt as vbt
 import pandas_ta as ta
 import numpy as np
@@ -6,8 +7,17 @@ import yaml
 from savetopdf import save_backtesting_results_to_pdf
 from makemetricpng import create_heatmap
 
+def get_time_interval(config):
+   
+    start_date = pd.to_datetime(config['Time_interval']['start_date']).normalize()
+    end_date = pd.to_datetime(config['Time_interval']['end_date']).normalize()
+    return start_date, end_date
+
+
 def processdata(config):
     df_day = pd.read_csv(config['Data_filename_day'], parse_dates=['Time'], index_col='Time')
+    start_date, end_date = get_time_interval(config)
+    df_day = df_day[(df_day.index >= start_date) & (df_day.index <= end_date)]
     df_day.drop(columns=['Volume'], inplace=True)
     df_day['SMA20'] = ta.sma(df_day['Close'], length=20)
     df_day['SMA50'] = ta.sma(df_day['Close'], length=50)
@@ -142,9 +152,14 @@ if __name__ == "__main__":
     df_day = processdata(config)
     df_day = chandelier_exit(df_day, use_close=False)
 
+    start_date, end_date = get_time_interval(config)
+    file_path = config['Data_filename_day'].split('.')[0]
+    split_do = file_path.split('[')[0]
+    split_po = file_path.split(']',1)[1]
+    split_po = split_po.split(']')[1]
+    file_path = f"{split_do}[{start_date.date()}][{end_date.date()}]{split_po}"
+
     for j in range(0, config['Days'] + 1):
         pf = backtest(df_day, j)
 
-        file_path = config['Data_filename_day'].split('.')[0]
-        file_path = (f"{file_path}_{j}_days")
-        save_backtesting_results_to_pdf(pf, file_path)
+        save_backtesting_results_to_pdf(pf, f"{file_path}_{j}_days")
