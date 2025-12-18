@@ -6,7 +6,6 @@ import yaml
 from savetopdf import save_backtesting_results_to_pdf
 
 def get_time_interval(config):
-   
     start_date = pd.to_datetime(config['Time_interval']['start_date']).normalize()
     end_date = pd.to_datetime(config['Time_interval']['end_date']).normalize()
     return start_date, end_date
@@ -142,6 +141,15 @@ def backtest(df_day, nday):
 
     return pf
 
+def make_path(config):
+    start_date, end_date = get_time_interval(config)
+    file_path = config['Data_filename_day'].split('.')[0]
+    split_do = file_path.split('[')[0]
+    split_po = file_path.split(']',1)[1]
+    split_po = split_po.split(']')[1]
+    file_path = f"{split_do}[{start_date.date()}][{end_date.date()}]{split_po}"
+    return file_path
+
 if __name__ == "__main__":
     
     with open('config.yaml', 'r') as file:
@@ -150,14 +158,8 @@ if __name__ == "__main__":
     df_day = processdata(config)
     df_day = chandelier_exit(df_day, use_close=False)
 
-    start_date, end_date = get_time_interval(config)
-    file_path = config['Data_filename_day'].split('.')[0]
-    split_do = file_path.split('[')[0]
-    split_po = file_path.split(']',1)[1]
-    split_po = split_po.split(']')[1]
-    file_path = f"{split_do}[{start_date.date()}][{end_date.date()}]{split_po}"
+    file_path = make_path(config)
 
     for j in range(0, config['Days'] + 1):
         pf = backtest(df_day, j)
-
         save_backtesting_results_to_pdf(pf, f"{file_path}_{j}_days")
