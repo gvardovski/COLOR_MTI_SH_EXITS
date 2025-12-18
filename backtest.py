@@ -1,11 +1,9 @@
 import pandas as pd
 import re
 import vectorbt as vbt
-import pandas_ta as ta
 import numpy as np
 import yaml
 from savetopdf import save_backtesting_results_to_pdf
-from makemetricpng import create_heatmap
 
 def get_time_interval(config):
    
@@ -19,8 +17,8 @@ def processdata(config):
     start_date, end_date = get_time_interval(config)
     df_day = df_day[(df_day.index >= start_date) & (df_day.index <= end_date)]
     df_day.drop(columns=['Volume'], inplace=True)
-    df_day['SMA20'] = ta.sma(df_day['Close'], length=20)
-    df_day['SMA50'] = ta.sma(df_day['Close'], length=50)
+    df_day['SMA20'] = df_day['Close'].rolling(window=20).mean()
+    df_day['SMA50'] = df_day['Close'].rolling(window=50).mean()
     df_day.dropna(inplace=True)
     df_day['Color'] = 'Y'
     df_day.loc[df_day['SMA20'] < df_day['SMA50'],'Color'] = 'R'
