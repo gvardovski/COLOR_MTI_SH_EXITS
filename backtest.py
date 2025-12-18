@@ -8,7 +8,7 @@ from makemetricpng import create_heatmap
 
 def processdata(config):
     df_day = pd.read_csv(config['Data_filename_day'], parse_dates=['Time'], index_col='Time')
-    df_day.drop(columns=['Volume', 'Change', 'ChangePercent', 'Vwap'], inplace=True)
+    df_day.drop(columns=['Volume'], inplace=True)
     df_day['SMA20'] = ta.sma(df_day['Close'], length=20)
     df_day['SMA50'] = ta.sma(df_day['Close'], length=50)
     df_day.dropna(inplace=True)
@@ -55,53 +55,77 @@ def chandelier_exit(df_day, length=22, mult=3.0, use_close=True):
 
     return df
 
-def backtest(df_day):
+def backtest(df_day, nday):
 
-    index_arr_day = df_day.index.to_numpy()
-    close_arr_day = df_day['Close'].to_numpy()
-    color_arr_day = df_day['Color'].to_numpy()
-    ch_exit_arr_day = df_day['Ch_exit'].to_numpy()
-    entry_arr_day = np.full(len(index_arr_day), False)
-    exit_arr_day = np.full(len(index_arr_day), False)
-    price_arr_day = np.full(len(index_arr_day), np.nan)
+    # index_arr_day = df_day.index.to_numpy()
+    # close_arr_day = df_day['Close'].to_numpy()
+    # color_arr_day = df_day['Color'].to_numpy()
+    # ch_exit_arr_day = df_day['Ch_exit'].to_numpy()
+    # entry_arr_day = np.full(len(index_arr_day), False)
+    # exit_arr_day = np.full(len(index_arr_day), False)
+    # price_arr_day = np.full(len(index_arr_day), np.nan)
+
+    # trade_is_open = False
+    # close_price = np.nan
+
+    # for i in range(0, len(index_arr_day)):
+    #     if not trade_is_open and color_arr_day[i] == 'G':
+    #         trade_is_open = True
+    #         entry_arr_day[i] = True
+    #         close_price = ch_exit_arr_day[i]
+    #         price_arr_day[i] = close_arr_day[i]
+    #     elif trade_is_open and close_arr_day[i] < close_price:
+    #         go_throw = -1
+    #         for j in range(0, nday + 1):
+    #             if close_arr_day[i + j] < close_price:
+    #                 go_throw += 1
+    #             if go_throw == nday:
+    #                 print(f"J = {j}")
+    #                 trade_is_open = False
+    #                 exit_arr_day[i + j] = True
+    #                 close_price = np.nan
+    #                 price_arr_day[i + j] = close_arr_day[i + j]
+
+    close_arr = df_day['Close'].to_numpy()
+    color_arr = df_day['Color'].to_numpy()
+    ch_exit_arr = df_day['Ch_exit'].to_numpy()
+
+    n = len(df_day)
+    entry_arr = np.zeros(n, dtype=bool)
+    exit_arr = np.zeros(n, dtype=bool)
+    price_arr = np.full(n, np.nan)
 
     trade_is_open = False
     close_price = np.nan
+    count = -1
 
-    for i in range(1, len(index_arr_day)):
-        if not trade_is_open and color_arr_day[i] == 'G':
+    for i in range(n):
+        if not trade_is_open and color_arr[i] == 'G':
             trade_is_open = True
-            entry_arr_day[i] = True
-            close_price = ch_exit_arr_day[i]
-            price_arr_day[i] = close_arr_day[i]
-        elif trade_is_open:
-            if (close_arr_day[i] > close_price):
-                stop = i + config['Days'] + 1
-                if (stop >= len(index_arr_day)):
-                    continue
-                go_throw = True
-                for j in range(i, stop):
-                    if (j >= len(index_arr_day)):
-                        break
-                    if (close_arr_day[j] < close_price):
-                        go_throw = False
-                        break
-                if go_throw:
-                    trade_is_open = False
-                    exit_arr_day[j] = True
-                    close_price = None
-                    price_arr_day[j] = close_arr_day[j]
+            entry_arr[i] = True
+            close_price = ch_exit_arr[i]
+            price_arr[i] = close_arr[i]
+            count = -1
+            continue
+        if trade_is_open:
+            if close_arr[i] < close_price:
+                count += 1
             else:
-                continue
-        else:
-                continue
+                count = -1
+
+            if count == nday:
+                trade_is_open = False
+                exit_arr[i] = True
+                price_arr[i] = close_arr[i]
+                close_price = np.nan
+                count = -1
 
     pf = vbt.Portfolio.from_signals(
-    entries = entry_arr_day,
-    exits = exit_arr_day,
-    price = price_arr_day,
+    entries = entry_arr,
+    exits = exit_arr,
+    price = price_arr,
     open = df_day["Open"],
-    close = close_arr_day,
+    close = close_arr,
     size = config['Trade']['size'],
     size_type = config['Trade']['size_type'],
     init_cash = config['Initial_cash'],
@@ -118,19 +142,9 @@ if __name__ == "__main__":
     df_day = processdata(config)
     df_day = chandelier_exit(df_day, use_close=False)
 
-    # rezults = []
-    for i in range(1, config['Days']+1):
-        pf = backtest(df_day)
-
-        # stats = pf.stats().to_dict()
-        # stats.update({'Days': i})
-        # rezults.append(stats)
+    for j in range(0, config['Days'] + 1):
+        pf = backtest(df_day, j)
 
         file_path = config['Data_filename_day'].split('.')[0]
-        file_path = (f"{file_path}_{i}_days")
+        file_path = (f"{file_path}_{j}_days")
         save_backtesting_results_to_pdf(pf, file_path)
-    
-    # optimization_df = pd.DataFrame(rezults)
-    # print(optimization_df.columns)
-    # print(f"CSV file with optimization '{file_path}_optimization.CSV' was created!")
-    # create_heatmap(optimization_df, metric_name='Total Return [%]', index_col='Days', column_col='')
