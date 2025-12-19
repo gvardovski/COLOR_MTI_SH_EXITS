@@ -1,5 +1,6 @@
 Strategy Overview, Backtest Interpretation, and Exit Delay Evaluation
 MTI + Chandelier Exit Strategy (Daily Timeframe)
+
 1. Strategy Overview
 
 This strategy combines:
@@ -9,6 +10,7 @@ It operates on daily bars and applies a configurable confirmation delay to exit 
 The system should be interpreted primarily as an entry + exit overlay framework, not a standalone alpha engine. Core return generation remains market-beta-driven.
 
 1.1 Market Trend Indicator (MTI)
+
 The MTI assigns one of three states based on moving-average relationships and slope direction:
 
 MTI State	Meaning
@@ -59,6 +61,7 @@ exit confirmation state storage
 
 Commissions: 0
 Slippage: 0
+
 Position sizing: fixed 1 amount per trade
 Initial capital: 10,000 USD
 
