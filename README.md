@@ -63,6 +63,7 @@ Commissions: 0
 Slippage: 0
 
 Position sizing: fixed 1 amount per trade
+
 Initial capital: 10,000 USD
 
 No concurrent overlapping trades
